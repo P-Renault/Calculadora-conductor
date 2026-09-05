@@ -1,9 +1,1 @@
-{
-  "name":"Calculadora Conductor Uber + inDrive",
-  "short_name":"Conductor",
-  "start_url":"./index.html",
-  "display":"standalone",
-  "background_color":"#f5f7fa",
-  "theme_color":"#111827",
-  "icons":[]
-}
+{"name":"Calculadora Conductor Uber + inDrive","short_name":"Conductor","start_url":"./index.html","display":"standalone","background_color":"#f5f7fa","theme_color":"#111827","icons":[]}

@@ -68,10 +68,10 @@ input,select{width:100%;min-height:46px;border:1px solid #d0d5dd;border-radius:1
 <script>
 const $=id=>document.getElementById(id);
 const money=n=>new Intl.NumberFormat('es-CL',{style:'currency',currency:'CLP',maximumFractionDigits:0}).format(Math.round(n));
-function decision(net,hour,km){
+function decision(net,hour,perKm){
  if(net<=0)return ['reject','🔴 RECHAZAR','No cubre los costos operativos.'];
- if(hour>=6000&&km>0&&net/km>=350)return ['accept','🟢 ACEPTAR','Cumple los objetivos de rentabilidad.'];
- if(hour<4000||(km>0&&net/km<250))return ['reject','🔴 RECHAZAR','El margen por tiempo o kilómetro es demasiado bajo.'];
+ if(hour>=6000&&perKm>=350)return ['accept','🟢 ACEPTAR','Cumple los objetivos de rentabilidad.'];
+ if(hour<4000||perKm<250)return ['reject','🔴 RECHAZAR','El margen por tiempo o kilómetro es demasiado bajo.'];
  return ['eval','🟡 EVALUAR','Puede convenir si el destino permite encadenar otro viaje.'];
 }
 function render(el,fare,km,min,fuel,eff,wear){
