@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Calculadora Conductor</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#f5f7fa;color:#111827}
+main{max-width:620px;margin:auto;padding:18px 14px 32px}.top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+h1{font-size:24px;margin:0}.sub{color:#667085;font-size:13px;margin:4px 0 16px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+button{min-height:46px;border:1px solid #d0d5dd;border-radius:12px;background:white;font-size:16px;font-weight:700;padding:10px;cursor:pointer}
+button.active{background:#111827;color:white;border-color:#111827}.card{background:white;border:1px solid #e4e7ec;border-radius:16px;padding:15px;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}@media(max-width:430px){.grid{grid-template-columns:1fr}}
+label{display:block;font-size:13px;color:#667085;margin-bottom:5px}
+input,select{width:100%;min-height:46px;border:1px solid #d0d5dd;border-radius:10px;padding:9px;font-size:16px;background:white}
+.primary{width:100%;background:#111827;color:white;border-color:#111827;margin-top:12px}
+.result{text-align:center;border-radius:16px;padding:17px;margin-top:12px;border:1px solid #d0d5dd}
+.accept{background:#ecfdf3;border-color:#abefc6}.eval{background:#fffaeb;border-color:#fedf89}.reject{background:#fef3f2;border-color:#fecdca}
+.decision{font-size:29px;font-weight:900}.reason{font-size:14px;margin-top:4px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:14px}
+.stat{background:rgba(255,255,255,.7);border-radius:10px;padding:9px}.small{font-size:11px;color:#667085}.big{font-size:17px;font-weight:800}
+.note{font-size:12px;color:#667085;line-height:1.45;margin-top:10px}.hidden{display:none}.row{display:flex;gap:8px}.row button{flex:1}
+</style>
+</head>
+<body>
+<main>
+<div class="top"><div><h1>🚕 Calculadora Conductor</h1><div class="sub">Uber + inDrive · funciona offline</div></div></div>
+<div class="tabs">
+<button id="quickTab" class="active">⚡ Conducción rápida</button>
+<button id="fullTab">⚙️ Completa</button>
+</div>
+
+<section id="quick" class="card">
+<div class="grid">
+<div><label>Aplicación</label><select id="qApp"><option>Uber</option><option>inDrive</option></select></div>
+<div><label>Pago ($)</label><input id="qFare" type="number" min="0" value="7000" inputmode="numeric"></div>
+<div><label>Km totales</label><input id="qKm" type="number" min="0" step="0.1" value="12" inputmode="decimal"></div>
+<div><label>Tiempo total (min)</label><input id="qMin" type="number" min="1" value="25" inputmode="numeric"></div>
+</div>
+<button class="primary" id="qCalc">CALCULAR AHORA</button>
+<div id="qOut"></div>
+</section>
+
+<section id="full" class="card hidden">
+<div class="grid">
+<div><label>Aplicación</label><select id="fApp"><option>Uber</option><option>inDrive</option></select></div>
+<div><label>Pago ($)</label><input id="fFare" type="number" min="0" value="7000" inputmode="numeric"></div>
+<div><label>Km hasta recoger</label><input id="fPickup" type="number" min="0" step="0.1" value="2" inputmode="decimal"></div>
+<div><label>Km con pasajero</label><input id="fTrip" type="number" min="0" step="0.1" value="10" inputmode="decimal"></div>
+<div><label>Tiempo total (min)</label><input id="fMin" type="number" min="1" value="25" inputmode="numeric"></div>
+<div><label>Combustible ($/L)</label><input id="fFuel" type="number" min="0" value="1635" inputmode="numeric"></div>
+<div><label>Rendimiento (km/L)</label><input id="fEff" type="number" min="0.1" value="13" inputmode="decimal"></div>
+<div><label>Desgaste + mantenimiento ($/km)</label><input id="fWear" type="number" min="0" value="75" inputmode="numeric"></div>
+</div>
+<button class="primary" id="fCalc">CALCULAR VIAJE</button>
+<div id="fOut"></div>
+</section>
+
+<section class="card">
+<strong>📌 Reglas actuales</strong>
+<div class="note">🟢 ACEPTAR: ≥ $6.000 netos/h y ≥ $350 netos/km.<br>
+🟡 EVALUAR: rentabilidad intermedia; considera especialmente el destino y la demanda.<br>
+🔴 RECHAZAR: margen bajo o negativo.</div>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const money=n=>new Intl.NumberFormat('es-CL',{style:'currency',currency:'CLP',maximumFractionDigits:0}).format(Math.round(n));
+function decision(net,hour,km){
+ if(net<=0)return ['reject','🔴 RECHAZAR','No cubre los costos operativos.'];
+ if(hour>=6000&&km>0&&net/km>=350)return ['accept','🟢 ACEPTAR','Cumple los objetivos de rentabilidad.'];
+ if(hour<4000||(km>0&&net/km<250))return ['reject','🔴 RECHAZAR','El margen por tiempo o kilómetro es demasiado bajo.'];
+ return ['eval','🟡 EVALUAR','Puede convenir si el destino permite encadenar otro viaje.'];
+}
+function render(el,fare,km,min,fuel,eff,wear){
+ fare=Math.max(0,fare);km=Math.max(0,km);min=Math.max(1,min);fuel=Math.max(0,fuel);eff=Math.max(.1,eff);wear=Math.max(0,wear);
+ const fuelCost=km*fuel/eff, wearCost=km*wear, cost=fuelCost+wearCost, net=fare-cost, hour=net/(min/60), perKm=km?net/km:0;
+ const d=decision(net,hour,perKm), cls=d[0]==='accept'?'accept':d[0]==='reject'?'reject':'eval';
+ el.innerHTML=`<div class="result ${cls}"><div class="decision">${d[1]}</div><div class="reason">${d[2]}</div>
+ <div class="stats"><div class="stat"><div class="small">Neto</div><div class="big">${money(net)}</div></div>
+ <div class="stat"><div class="small">Neto/h</div><div class="big">${money(hour)}</div></div>
+ <div class="stat"><div class="small">Neto/km</div><div class="big">${money(perKm)}</div></div></div>
+ <div class="note">Combustible: ${money(fuelCost)} · Desgaste: ${money(wearCost)} · Km: ${km.toFixed(1)} · Bruto/h: ${money(fare/(min/60))}</div></div>`;
+}
+function quick(){render($('qOut'),+$('qFare').value,+$('qKm').value,+$('qMin').value,1635,13,75)}
+function full(){render($('fOut'),+$('fFare').value,+$('fPickup').value + +$('fTrip').value,+$('fMin').value,+$('fFuel').value,+$('fEff').value,+$('fWear').value)}
+$('qCalc').onclick=quick;$('fCalc').onclick=full;
+$('quickTab').onclick=()=>{ $('quick').classList.remove('hidden');$('full').classList.add('hidden');$('quickTab').classList.add('active');$('fullTab').classList.remove('active');quick()};
+$('fullTab').onclick=()=>{ $('full').classList.remove('hidden');$('quick').classList.add('hidden');$('fullTab').classList.add('active');$('quickTab').classList.remove('active');full()};
+['qFare','qKm','qMin'].forEach(id=>$(id).addEventListener('input',quick));
+['fFare','fPickup','fTrip','fMin','fFuel','fEff','fWear'].forEach(id=>$(id).addEventListener('input',full));
+quick();
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
